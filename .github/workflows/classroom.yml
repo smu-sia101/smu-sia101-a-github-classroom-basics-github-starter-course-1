@@ -1,0 +1,41 @@
+name: Build .NET Application
+
+on:
+  - push
+  - workflow_dispatch
+  - repository_dispatch
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  build-dotnet:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x' # Adjust based on project requirements
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build project
+        id: build-step
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run tests (if applicable)
+        id: test-step
+        run: dotnet test --no-build --configuration Release
+        continue-on-error: true  # Allows grading even if tests fail
+
+      - name: Autograding Reporter
+        uses: classroom-resources/autograding-grading-reporter@v1
+        with:
+          runners: build-step,test-step  # Ensure these match step IDs
